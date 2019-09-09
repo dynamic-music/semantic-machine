@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as _ from 'lodash';
-import * as wavinfo from 'wav-file-info';
+import * as musicMetadata from 'music-metadata';
 import { SuperDymoStore, DymoGenerator, DymoTemplates, uris, forAll } from 'dymo-core';
 import { DymoWriter } from './dymo-writer';
 import { SERVER_PATH } from './server';
@@ -241,13 +241,13 @@ async function addParamDependentType(dymoType: string, paramType: string) {
   return type;
 }
 
-async function getDuration(audio: string): Promise<any> {
-  return new Promise((resolve, reject) => {
-    wavinfo.infoByFilename(audio.replace('.m4a','.wav'), (err, info) => {
-      if (err) reject(err);
-      resolve(info.duration);
-    });
-  })
+/**
+ * Extract audio duration of provided audio file
+ * @param audio {string} path to audio file
+ * @return {Promise<number>} duration in seconds
+ */
+async function getDuration(audio: string): Promise<number> {
+  return musicMetadata.parseFile(audio, {duration: true}).then(metadata => metadata.format.duration);
 }
 
 /*async function addMaterial(parent: string, searchStrings: string[][], excludeStrings: string[] = [], dymoType = uris.MULTI_SELECTION) {
