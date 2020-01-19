@@ -45,6 +45,7 @@
     "core-js": "^2.6.11",
     "dymo-player": "^0.4.1",
     "lodash": "^4.17.15",
+    "music-metadata": "^4.5.3",
     "rxjs": "~6.5.1",
     "stream": "0.0.2",
     "tslib": "^1.9.0",
