@@ -1,15 +1,18 @@
 <ion-content>
   <ion-toolbar color="transp" *ngIf="config.showTitle">
-    <ion-title>{{config.title + (contextName ? " ("+contextName+")" : "")}}</ion-title>
+    <ion-title>{{config.title}}</ion-title>
     <ion-buttons *ngIf="contextIcon" slot="primary">
-      <ion-button (click)="showInfo()">
-        <img slot="icon-only" src="{{contextIcon}}">
-      </ion-button>
       <ion-button (click)="play()">
         <ion-icon slot="icon-only" name="play"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
+  <ion-item color="transp">
+    <ion-label>{{"   "+(contextName ? contextName : "")}}</ion-label>
+    <ion-button color="transp" (click)="showInfo()">
+      <img slot="icon-only" src="{{contextIcon}}">
+    </ion-button>
+  </ion-item>
   <ion-item large color="dark" *ngIf="config.showDymoSelector">
     <ion-label>Select Dynamic Music Object</ion-label>
     <ion-select [(ngModel)]="selectedDymo" multiple="false" (ionChange)="dymoSelected()">

@@ -28,20 +28,20 @@ import * as _ from 'lodash';
 })
 export class PlayerComponent {
 
-  protected config: PlayerConfig = {};
-  protected showSensorData: boolean;
+  public config: PlayerConfig = {};
+  public showSensorData: boolean;
   private loading: Promise<HTMLIonLoadingElement>;
   private sensors: SensorControl[];
   private sliders: InnoyicSliderWrapper[];
   private toggles: UIControl[];
   private buttons: UIControl[];
   private areas: AreaControl[];
-  protected performanceInfo: string;
+  public performanceInfo: string;
   private numPlayingDymos: number;
   private numLoadedBuffers: number;
   private location: [number, number];
-  protected contextName: string = "";
-  protected contextIcon: string;
+  public contextName: string = "";
+  public contextIcon: string;
 
   player: DymoPlayer;
   selectedDymo: DymoConfig;
@@ -165,39 +165,50 @@ export class PlayerComponent {
     this.contextName = currentWeather.name + ", " + weather.description;
     this.contextIcon = "https://openweathermap.org/img/wn/"+weather.icon+".png";
     console.log(amenities, weather);
-    const primary = remoteness < 0.3 ? 2
+    let primary = remoteness < 0.3 ? 2
       : remoteness < 0.6 ? 1
-      : remoteness < 0.85 ? 0
-      : 3;
-    const secondary = [800,801].indexOf(weather.id) >= 0 ? 2 //clear sky, few clouds
+      : remoteness < 0.85 ? 3
+      : 0;
+    let secondary = [800,801].indexOf(weather.id) >= 0 ? 2 //clear sky, few clouds
       : weather.main === "Clouds" ? 1 //scattered/broken/overcast clouds
-      : ["Rain", "Drizzle"].indexOf(weather.main) >= 0 ? 0
-      : 3; //atmosphere, thunderstorm, snow
+      : ["Rain", "Drizzle"].indexOf(weather.main) >= 0 ? 3
+      : 0; //atmosphere, thunderstorm, snow
+    const VOCS = [[0,1],[2,3],[4,5,6],[7,8,9,10]]// vocs per version...
+    let vocals = _.sample(VOCS[primary].concat(VOCS[secondary]));
     
-    const MAX_INSTR_COUNT = 12;//in g1/g2/g3/g4
-    const MAX_PLAYING = 12;
-    const MIN_PLAYING = 4;
-    const PRIMARY_PROPORTION = 0.5;
+    //primary = 3, secondary = 3, vocals = 7;
+    
+    //const MAX_INSTR_COUNT = 13;//in g1/g2/g3/g4
+    const PRIMARY_PROPORTION = 0.65;
+    const MIN_PLAYING_PROP = 0.3;
+    const MAX_PLAYING_PROP = 0.85;
+    const VOC_PROB = 0.8;
+    
     const store = this.player.getDymoManager().getStore();
+    const materialSizes = await this.getMaterialSizes();
+    console.log(materialSizes);
+    
     await store.setParameter(null, uris.CONTEXT_URI+"remoteness", remoteness);
-    await store.setParameter(null, uris.CONTEXT_URI+"vocals", primary);
+    await store.setParameter(null, uris.CONTEXT_URI+"vocals", vocals);
     await store.setParameter(null, uris.CONTEXT_URI+"primarymaterial", primary);
     await store.setParameter(null, uris.CONTEXT_URI+"secondarymaterial", secondary);
     const timeOfDay = await store.findParameterValue(null, uris.CONTEXT_URI+"timeofday");
-    const activity = 1-(2*Math.abs(timeOfDay-0.5)); //range [0,1]
-    const partCount = _.round((activity*(MAX_PLAYING-MIN_PLAYING))+MIN_PLAYING); //range [min,max]
-    const primaryCount = _.round(partCount*PRIMARY_PROPORTION);
-    const secondaryCount = _.round(partCount*(1-PRIMARY_PROPORTION));
-    const primaries = _.sampleSize(_.range(MAX_INSTR_COUNT), primaryCount);
+    const activity = 1 - (2 * Math.abs(timeOfDay - 0.5)); // range [0,1]
+    
+    const partProp = MIN_PLAYING_PROP + (activity * (MAX_PLAYING_PROP - MIN_PLAYING_PROP));
+    const primaryCount = _.round(materialSizes[primary] * partProp * PRIMARY_PROPORTION);
+    const secondaryCount = _.round(materialSizes[secondary] * partProp * (1 - PRIMARY_PROPORTION));
+    const primaries = _.sampleSize(_.range(materialSizes[primary]), primaryCount);
     const remaining = primary === secondary ?
-      _.difference(_.range(MAX_INSTR_COUNT), primaries) : _.range(MAX_INSTR_COUNT);
+      _.difference(_.range(materialSizes[secondary]), primaries) : _.range(materialSizes[secondary]);
     const secondaries = _.sampleSize(remaining, secondaryCount);
     await store.setParameter(null, uris.CONTEXT_URI+"primaryinstruments", primaries);
     await store.setParameter(null, uris.CONTEXT_URI+"secondaryinstruments", secondaries);
     console.log("VOCALS", await store.findParameterValue(null, uris.CONTEXT_URI+"vocals"));
     console.log("PRIMARY", await store.findParameterValue(null, uris.CONTEXT_URI+"primarymaterial"));
     console.log("SECONDARY", await store.findParameterValue(null, uris.CONTEXT_URI+"secondarymaterial"));
-    console.log("PARTS", partCount);
+    console.log("PARTS", partProp, primaryCount + '/' + materialSizes[primary],
+      secondaryCount + '/' + materialSizes[secondary]);
     console.log("PRIM_INST", await store.findParameterValue(null, uris.CONTEXT_URI+"primaryinstruments"));
     console.log("SEC_INST", await store.findParameterValue(null, uris.CONTEXT_URI+"secondaryinstruments"));
   }
@@ -224,6 +235,16 @@ export class PlayerComponent {
     console.log("SOUND", await store.findParameterValue(null, uris.CONTEXT_URI+"sound"));
     console.log("PERC", await store.findParameterValue(null, uris.CONTEXT_URI+"perc"));
     console.log("SYNTH", await store.findParameterValue(null, uris.CONTEXT_URI+"synths"));
+  }
+  
+  private async getMaterialSizes() {
+    const store = this.player.getDymoManager().getStore();
+    const mainDymo = (await store.findSubjects(null, uris.SEQUENCE))[0];
+    const sections = await store.findParts(mainDymo);
+    const parts = await store.findParts(sections[0]);
+    const instr = await store.findParts(parts[1]);
+    const instrParts = await Promise.all(instr.map(i => store.findParts(i)));
+    return instrParts.map(i => i.length);
   }
 
   private async preloadFirstTwoSections() {

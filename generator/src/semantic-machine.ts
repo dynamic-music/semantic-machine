@@ -14,7 +14,7 @@ new DymoWriter('src/assets/dymo/', 'src/assets/config.json').generateAndWriteDym
 ]);
 
 
-const VOCALS = ["G1Vox", "G2Vox", "G3Vox", "G4Vox"]//, "Karaoke"];
+const VOCALS = ["G1Vox1", "G1Vox2", "G2Vox1", "G2Vox2", "G3Vox1", "G3Vox2", "G3Vox3", "G4Vox1", "G4Vox2", "G4Vox3", "G4Vox4"]//, "Karaoke"];
 const G1_VOICES = ["G1Flutey","G1Strings","G1Drums","G1FWave","G1Piano","G1Synth","G1LSound"]; //7
 const G2_VOICES = ["G2SEnd","G2BVs","G2Bells","G2PTone","G2Drums2","G2DPad","G2Keys","G2Bass","G2SPad","G2Strings2"]; //10
 const G3_VOICES = ["G3Synth2","G3Drums3","G3Bass","G3BVs","G3Drums4","G3Kick","G3Noise","G3Pedal","G3Horn","G3Strings","G3Synth1"]; //11
