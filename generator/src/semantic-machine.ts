@@ -53,10 +53,10 @@ async function initSemanticMachine(): Promise<any> {
   console.log('creating structure')
   //TODO OF COURSE!!!!! GROUP DYMOS!!!!!!!!!
   const vocals = await addSelectionOfSources([["Vox"]]);
-  const drums = await addSelectionOfSources([["Drums", "Kick"]]);
+  const drums = await addSelectionOfSources([["Drums", "Kick", "Perc"]]);
   const bass = await addSelectionOfSources([["Bass", "BSynth"]]);
-  const pads = await addSelectionOfSources([["Bells", "PTone", "Pedal", "BVs"]]);
-  const ambient = await addSelectionOfSources([["SPad", "DPad", "Noise", "LSound"]]); //Horn
+  const pads = await addSelectionOfSources([["Bells", "PTone", "Pedal", "BVs", "FWave", "SEnd"]]);
+  const ambient = await addSelectionOfSources([["SPad", "DPad", "Noise", "LSound", "Flutey"]]); //Horn
   const keys = await addSelectionOfSources([["Keys", "Piano", "String", "Synth"]]);
   
   //console.log(await store.findParts(drums), await store.findAllParents("http://tiny.cc/dymo-context/dymo10"))
