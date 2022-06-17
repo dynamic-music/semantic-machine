@@ -174,14 +174,14 @@ export class PlayerComponent {
       : ["Rain", "Drizzle"].indexOf(weather.main) >= 0 ? 3
       : 0; //atmosphere, thunderstorm, snow
     const VOCS = [[0,1],[2,3],[4,5,6],[7,8,9,10]]// vocs per version...
-    let vocals = _.sample(VOCS[primary].concat(VOCS[secondary]));
+    let vocals = _.sample(VOCS[primary])//.concat(VOCS[secondary]));
     
     //primary = 3, secondary = 3, vocals = 7;
     
     //const MAX_INSTR_COUNT = 13;//in g1/g2/g3/g4
-    const PRIMARY_PROPORTION = 0.65;
-    const MIN_PLAYING_PROP = 0.3;
-    const MAX_PLAYING_PROP = 0.85;
+    const PRIMARY_PROPORTION = 0.6;
+    const MIN_PLAYING_PROP = 0.5;
+    const MAX_PLAYING_PROP = 1;
     const VOC_PROB = 0.8;
     
     const store = this.player.getDymoManager().getStore();
@@ -193,7 +193,8 @@ export class PlayerComponent {
     await store.setParameter(null, uris.CONTEXT_URI+"primarymaterial", primary);
     await store.setParameter(null, uris.CONTEXT_URI+"secondarymaterial", secondary);
     const timeOfDay = await store.findParameterValue(null, uris.CONTEXT_URI+"timeofday");
-    const activity = 1 - (2 * Math.abs(timeOfDay - 0.5)); // range [0,1]
+    const adjustedTOD = (timeOfDay + 0.875) % 1; // 3pm is max, 3am min
+    const activity = 1 - (2 * Math.abs(adjustedTOD - 0.5)); // range [0,1]
     
     const partProp = MIN_PLAYING_PROP + (activity * (MAX_PLAYING_PROP - MIN_PLAYING_PROP));
     const primaryCount = _.round(materialSizes[primary] * partProp * PRIMARY_PROPORTION);
